@@ -32,7 +32,7 @@ void gotoxy(short x, short y) {
 	COORD position = { x, y };
 	if (hStdout == NULL) {
 		hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-		assertHandleIsNot(hStdout, NULL, (TCHAR *)TEXT("GetStdHandle falhou"));
+		assertHandleIsNot(hStdout, NULL, TEXT("GetStdHandle falhou"));
 	}
 	SetConsoleCursorPosition(hStdout, position);
 }
@@ -60,21 +60,21 @@ void inicializa() {
 
 	// Security Desc, Owner inicial (S/N), Nome
 	MutProd = CreateMutex(NULL, FALSE, NULL);
-	//assertHandleIsNot(MutProd, NULL, TEXT("MutProd falhou..."));
+	assertHandleIsNot(MutProd, NULL, TEXT("MutProd falhou..."));
 	MutCons = CreateMutex(NULL, FALSE, NULL);
-	//assertHandleIsNot(MutCons, NULL, TEXT("MutCons falhou..."));
+	assertHandleIsNot(MutCons, NULL, TEXT("MutCons falhou..."));
 
 	// Security Desc, Cont inicial (disp), cont max, Nome
 	// MAXTIENS itens nenhum diponivel inicialmente
 	SemItens = CreateSemaphore(NULL, 0, MAXITENS, NULL);
-	//assertHandleIsNot(SemItens, NULL, TEXT("SemItens falhou..."));
+	assertHandleIsNot(SemItens, NULL, TEXT("SemItens falhou..."));
 	// MAXTIENS posicoes, todos disponiveis inicialmente
-	SemVazios = CreateSemaphore(NULL, 0, MAXITENS, NULL);
-	//assertHandleIsNot(SemVazios, NULL, TEXT("SemVazios falhou..."));
+	SemVazios = CreateSemaphore(NULL, MAXITENS, MAXITENS, NULL);
+	assertHandleIsNot(SemVazios, NULL, TEXT("SemVazios falhou..."));
 
 	// Mutex completemante assessorio, para UI apenas
 	MutPrint = CreateMutex(NULL, FALSE, NULL);
-	//assertHandleIsNot(MutPrint, NULL, TEXT("MutPrint falhou..."));
+	assertHandleIsNot(MutPrint, NULL, TEXT("MutPrint falhou..."));
 }
 
 void printItens() {
@@ -83,9 +83,9 @@ void printItens() {
 	// imprime uma "regua"
 	for (i = 0; i < MAXITENS; i++)
 		if (i < 10)
-			_tprintf(TEXT(" %d "), i);
+			_tprintf(TEXT("  %d "), i);
 		else
-			_tprintf(TEXT("%d "), i);
+			_tprintf(TEXT(" %d "), i);
 
 	//imprime os itens
 	_tprintf(TEXT("\n |"));
@@ -94,7 +94,7 @@ void printItens() {
 		if (itens[i] < 10)
 			_tprintf(TEXT(" %d |"), itens[i]);
 		else
-			_tprintf(TEXT("%d| "), itens[i]);
+			_tprintf(TEXT(" %d|"), itens[i]);
 
 	//imprime os indices: marcas in e out
 	_tprintf(TEXT("\n "));
@@ -156,7 +156,7 @@ void consumeItem(int quem) {
 	printItens(); // so para efeitos de teste
 	ReleaseMutex(MutPrint);
 	// fim de seccao critica pessima
-	ReleaseMutex(MutProd);
+	ReleaseMutex(MutCons);
 	// assinala nova posicao vazia
 	ReleaseSemaphore(SemVazios, 1, &previous);
 }
@@ -197,7 +197,7 @@ int _tmain(int argc, TCHAR * argv[]) {
 	int i;
 	DWORD id;
 
-	//srand((unsigned)time(NULL));
+	srand((unsigned)time(NULL));
 
 	// coloca consola com suporte para caracteres acentuados
 #ifdef UNICODE
@@ -230,5 +230,6 @@ int _tmain(int argc, TCHAR * argv[]) {
 	ReleaseSemaphore(SemVazios, MAXITENS, NULL); // exercicio: fazer melhor...
 	WaitForMultipleObjects(NUMCONS, consumidores, TRUE, INFINITE);
 	WaitForMultipleObjects(NUMPROD, produtores, TRUE, INFINITE);
+	_gettch();
 	_tprintf(TEXT("\n"));
 }
